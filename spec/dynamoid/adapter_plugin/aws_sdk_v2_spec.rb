@@ -99,6 +99,72 @@ describe Dynamoid::AdapterPlugin::AwsSdkV2 do
 
       Dynamoid.adapter.delete_table('CreateTable')
     end
+
+    describe 'create table with secondary index' do
+      let(:doc_class) do
+        Class.new do
+          include Dynamoid::Document
+          range :range => :number
+          field :range2
+          field :hash2
+        end
+      end
+
+      it 'creates table with local_secondary_index' do
+        # setup
+        doc_class.table({:name => 'table_lsi', :key => :id})
+        doc_class.local_secondary_index ({
+          :range_key => :range2,
+        })
+
+        Dynamoid.adapter.create_table('table_lsi', :id, {
+          :local_secondary_indexes => doc_class.local_secondary_indexes.values,
+          :range_key => { :range => :number }
+        })
+
+        # execute
+        data = Dynamoid.adapter.client.describe_table(table_name: 'table_lsi').data
+        lsi = data.table.local_secondary_indexes.first
+
+        # test
+        expect(lsi.index_name).to eql "dynamoid_tests_table_lsi_index_id_range2"
+        expect(lsi.key_schema.map(&:to_hash)).to eql [
+          {:attribute_name=>"id", :key_type=>"HASH"},
+          {:attribute_name=>"range2", :key_type=>"RANGE"}
+        ]
+        expect(lsi.projection.to_hash).to eql ({:projection_type=>"KEYS_ONLY"})
+      end
+
+      it 'creates table with global_secondary_index' do
+        # setup
+        doc_class.table({:name => 'table_gsi', :key => :id})
+        doc_class.global_secondary_index ({
+          :hash_key => :hash2,
+          :range_key => :range2,
+          :write_capacity => 10,
+          :read_capacity => 20
+
+        })
+        Dynamoid.adapter.create_table('table_gsi', :id, {
+          :global_secondary_indexes => doc_class.global_secondary_indexes.values,
+          :range_key => { :range => :number }
+        })
+
+        # execute
+        data = Dynamoid.adapter.client.describe_table(table_name: 'table_gsi').data
+        gsi = data.table.global_secondary_indexes.first
+
+        # test
+        expect(gsi.index_name).to eql "dynamoid_tests_table_gsi_index_hash2_range2"
+        expect(gsi.key_schema.map(&:to_hash)).to eql [
+          {:attribute_name=>"hash2", :key_type=>"HASH"},
+          {:attribute_name=>"range2", :key_type=>"RANGE"}
+        ]
+        expect(gsi.projection.to_hash).to eql ({:projection_type=>"KEYS_ONLY"})
+        expect(gsi.provisioned_throughput.read_capacity_units).to eql 20
+        expect(gsi.provisioned_throughput.write_capacity_units).to eql 10
+      end
+    end
   end
 
 
