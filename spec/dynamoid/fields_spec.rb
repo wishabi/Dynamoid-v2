@@ -91,6 +91,7 @@ describe Dynamoid::Fields do
                                         options: {type: :serialized},
                                         deliverable: {type: :boolean},
                                         latitude: {type: :number},
+                                        info: {type: :hash},
                                         lock_version: {type: :integer}})
     end
   end

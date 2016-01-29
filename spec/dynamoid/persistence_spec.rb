@@ -82,6 +82,18 @@ describe Dynamoid::Persistence do
     expect(@subscription.send(:dump)[:magazine_ids]).to eq Set[@magazine.id]
   end
 
+  describe 'boolean attributes' do
+    it 'dumps it as boolean' do
+      address.deliverable = true
+      expect(address.send(:dump)[:deliverable]).to eql true
+    end
+
+    it 'raises exception if value is not boolean' do
+      address.deliverable = "true"
+      expect { address.send(:dump)[:deliverable] }.to raise_error(ArgumentError)
+    end
+  end
+
   it 'handles nil attributes properly' do
     expect(Address.undump(nil)).to be_a(Hash)
   end
@@ -101,6 +113,15 @@ describe Dynamoid::Persistence do
 
   it 'dumps and undumps a BigDecimal in number field' do
     expect(Address.undump(Address.new(latitude: BigDecimal.new(123.45, 3)).send(:dump))[:latitude]).to eq 123
+  end
+
+  it 'dumps and undumps a Boolean in :boolean field' do
+    expect(Address.undump(Address.new(deliverable: true).send(:dump))[:deliverable]).to eq true
+  end
+
+  it 'dumps and undumps a Hash in :hash field' do
+    h = {:population => 1000}
+    expect(Address.undump(Address.new(info: h).send(:dump))[:info]).to eq h
   end
 
   it 'supports empty containers in `serialized` fields' do
