@@ -95,6 +95,8 @@ module Dynamoid
                 BigDecimal.new(value.to_s)
               when :array
                 value.to_a
+              when :hash
+                value
               when :set
                 Set.new(value)
               when :datetime
@@ -271,12 +273,22 @@ module Dynamoid
             !value.nil? ? Set.new(value) : nil
           when :array
             !value.nil? ? value : nil
+          when :hash
+            !value.nil? ? value : nil
           when :datetime
             !value.nil? ? value.to_time.to_f : nil
           when :serialized
             options[:serializer] ? options[:serializer].dump(value) : value.to_yaml
           when :boolean
-            !value.nil? ? value.to_s[0] : nil
+            if(!value.nil?)
+              if [true, false].include?(value)
+                value
+              else
+                raise ArgumentError, "Boolean column neither true nor false"
+              end
+            else
+              nil
+            end
           else
             raise ArgumentError, "Unknown type #{options[:type]}"
         end
