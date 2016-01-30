@@ -374,6 +374,18 @@ describe Dynamoid::Persistence do
         expect { a2.destroy }.to raise_exception(Dynamoid::Errors::StaleObjectError)
       end
 
+      it 'skips the lock check if :skip_lock_check = true' do
+        address.save!
+        a1 = address
+        a2 = Address.find(address.id)
+
+        a1.city = 'Seattle'
+        a1.save!
+
+        a2.destroy(:skip_lock_check => true)
+        expect(Address.find(address.id)).to eql nil
+      end
+
       it 'uses the correct lock_version even if it is modified' do
         address.save!
         a1 = address

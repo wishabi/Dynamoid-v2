@@ -144,6 +144,14 @@ module Dynamoid
         end
       end
 
+      # Do not use this on production. It is easier to recreate a table
+      # rather than do this. This is for testing only
+      # @param opts
+      # @option opts [Boolean] :skip_lock_check - skips checking the lock version
+      def destroy_all(opts = {})
+        batch_size = opts[:batch_size] || 100
+        self.eval_limit(batch_size).all.each {|i| i.destroy(opts)}
+      end
     end
 
     # Set updated_at and any passed in field to current DateTime. Useful for things like last_login_at, etc.
@@ -212,35 +220,40 @@ module Dynamoid
     end
 
     # Delete this object, but only after running callbacks for it.
-    #
+    # @param opts
+    # @option opts [Boolean] :skip_lock_check - skips checking the lock version
     # @since 0.2.0
-    def destroy
+    def destroy(opts = {})
       ret = run_callbacks(:destroy) do
-        self.delete
+        self.delete(opts)
       end
       (ret == false) ? false : self
     end
 
-    def destroy!
-      destroy || raise(Dynamoid::Errors::RecordNotDestroyed.new(self))
+    # @param opts
+    # @option opts [Boolean] :skip_lock_check - skips checking the lock version
+    def destroy!(opts = {})
+      destroy(opts) || raise(Dynamoid::Errors::RecordNotDestroyed.new(self))
     end
 
     # Delete this object from the datastore.
     #
     # @since 0.2.0
-    def delete
+    def delete(opts = {})
       options = range_key ? {:range_key => dump_field(self.read_attribute(range_key), self.class.attributes[range_key])} : {}
 
       # Add an optimistic locking check if the lock_version column exists
-      if(self.class.attributes[:lock_version])
-        conditions = {:if => {}}
-        conditions[:if][:lock_version] =
-          if changes[:lock_version].nil?
-            self.lock_version
-          else
-            changes[:lock_version][0]
-          end
-        options[:conditions] = conditions
+      unless opts[:skip_lock_check] == true
+        if(self.class.attributes[:lock_version])
+          conditions = {:if => {}}
+          conditions[:if][:lock_version] =
+            if changes[:lock_version].nil?
+              self.lock_version
+            else
+              changes[:lock_version][0]
+            end
+          options[:conditions] = conditions
+        end
       end
       Dynamoid.adapter.delete(self.class.table_name, self.hash_key, options)
     rescue Dynamoid::Errors::ConditionalCheckFailedException
