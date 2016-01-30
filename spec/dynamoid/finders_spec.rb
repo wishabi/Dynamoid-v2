@@ -154,9 +154,38 @@ describe Dynamoid::Finders do
       Dynamoid.adapter.expects(:read).with(anything, user_ids, :consistent_read => true)
       User.find_all(user_ids, :consistent_read => true)
     end
-
   end
 
+  describe '.find_all_by_composite_key' do
+    let(:time) { Time.now }
+    it 'finds all items if hash key provided' do
+      Post.create(:post_id => 1, :posted_at => time)
+      Post.create(:post_id => 1, :posted_at => time + 1.day)
+      Post.create(:post_id => 2, :posted_at => time + 1.day)
+
+      posts = Post.find_all_by_composite_key("1")
+      expect(posts.count).to eql 2
+    end
+
+    it 'finds all items if hash and range provided' do
+      Post.create(:post_id => 1, :posted_at => time)
+      Post.create(:post_id => 1, :posted_at => time + 1.day)
+      Post.create(:post_id => 2, :posted_at => time + 1.day)
+
+      posts = Post.find_all_by_composite_key(
+        "1",
+        :range_less_than => (time + 5.hours).to_time.to_f
+      )
+      expect(posts.count).to eql 1
+    end
+
+    it 'fetches all records without limit when fetch_all param provided' do
+      expect(Dynamoid.adapter).to receive(:query).with(Post.table_name,
+        {:hash_value => 1, :fetch_all => true}
+      ).and_return({})
+      Post.find_all_by_composite_key(1, :fetch_all => true)
+    end
+  end
 
   describe '.find_all_by_secondary_index' do
     def time_to_f(time)
@@ -168,6 +197,17 @@ describe Dynamoid::Finders do
       expect do
         Post.find_all_by_secondary_index(:posted_at => Time.now.to_i)
       end.to raise_exception(Dynamoid::Errors::MissingIndex)
+    end
+
+    it 'fetches all records without limit when fetch_all param provided' do
+      expect(Dynamoid.adapter).to receive(:query).with(Post.table_name, {
+          :hash_key => "length",
+          :hash_value => "1",
+          :fetch_all => true,
+          :index_name => "dynamoid_tests_posts_index_length"
+        }
+      ).and_return({})
+      Post.find_all_by_secondary_index({:length => "1"}, :fetch_all => true)
     end
 
     context 'local secondary index' do

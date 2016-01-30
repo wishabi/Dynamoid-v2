@@ -101,7 +101,7 @@ module Dynamoid
       # @option options [Number] :range_less_than find range keys less than this
       # @option options [Number] :range_gte find range keys greater than or equal to this
       # @option options [Number] :range_lte find range keys less than or equal to this
-      #
+      # @option options [Boolean] :fetch_all Fetch all records instead of limiting to 1MB
       # @return [Array] an array of all matching items
       #
       def find_all_by_composite_key(hash_key, options = {})
@@ -124,10 +124,10 @@ module Dynamoid
       #   end
       #   User.find_all_by_secondary_index(:age => 5, :range => {"rank.lte" => 10})
       #
-      # @param [Hash] eg: {:age => 5}
-      # @param [Hash] eg: {"rank.lte" => 10}
-      # @param [Hash] options - @TODO support more options in future such as
-      #               query filter, projected keys etc
+      # @param [Hash] hash eg: {:age => 5}
+      # @param [Hash] options - @TODO support more options in future such as query filter, projected keys etc
+      # @option options [Hash] :range {"rank.lte" => 10}
+      # @option options [Boolean] :fetch_all Fetch all records instead of limiting to 1MB
       # @return [Array] an array of all matching items
       def find_all_by_secondary_index(hash, options = {})
         range = options[:range] || {}
@@ -158,6 +158,7 @@ module Dynamoid
           opts[:range_key] = range_key_field
           opts[range_op_mapped] = range_key_value
         end
+        opts[:fetch_all] = true if options[:fetch_all] == true
         Dynamoid.adapter.query(self.table_name, opts).map do |item|
           from_database(item)
         end
