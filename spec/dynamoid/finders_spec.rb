@@ -49,6 +49,11 @@ describe Dynamoid::Finders do
   #end
 
   context 'with users' do
+    it 'finds using find_by_primary_key' do
+      user = User.create(:name => 'Josh', :email => 'josh@joshsymonds.com')
+      expect(User.find_by_primary_key(user.id)).to eql user
+    end
+
     it 'finds using method_missing for attributes' do
       array = Address.find_by_city('Chicago')
 

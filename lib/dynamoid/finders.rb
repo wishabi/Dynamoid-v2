@@ -73,6 +73,7 @@ module Dynamoid
           nil
         end
       end
+      alias_method :find_by_primary_key, :find_by_id
 
       # Find one object directly by hash and range keys
       #
