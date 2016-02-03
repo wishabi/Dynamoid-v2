@@ -184,11 +184,11 @@ describe Dynamoid::Finders do
       expect(posts.count).to eql 1
     end
 
-    it 'fetches all records without limit when fetch_all param provided' do
+    it 'fetches all records without limit when batch_size param provided' do
       expect(Dynamoid.adapter).to receive(:query).with(Post.table_name,
-        {:hash_value => 1, :fetch_all => true}
+        {:hash_value => 1, :batch_size => 5}
       ).and_return({})
-      Post.find_all_by_composite_key(1, :fetch_all => true)
+      Post.find_all_by_composite_key(1, :batch_size => 5)
     end
   end
 
@@ -204,15 +204,15 @@ describe Dynamoid::Finders do
       end.to raise_exception(Dynamoid::Errors::MissingIndex)
     end
 
-    it 'fetches all records without limit when fetch_all param provided' do
+    it 'fetches all records without limit when batch_size param provided' do
       expect(Dynamoid.adapter).to receive(:query).with(Post.table_name, {
           :hash_key => "length",
           :hash_value => "1",
-          :fetch_all => true,
+          :batch_size => 5,
           :index_name => "dynamoid_tests_posts_index_length"
         }
       ).and_return({})
-      Post.find_all_by_secondary_index({:length => "1"}, :fetch_all => true)
+      Post.find_all_by_secondary_index({:length => "1"}, :batch_size => 5)
     end
 
     context 'local secondary index' do
