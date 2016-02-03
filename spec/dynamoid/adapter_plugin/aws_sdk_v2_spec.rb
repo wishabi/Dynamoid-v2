@@ -317,7 +317,7 @@ describe Dynamoid::AdapterPlugin::AwsSdkV2 do
       expect(Dynamoid.adapter.query(test_table1, :hash_value => '1').first).to eq({ :id=> '1', :name=>"Josh" })
     end
 
-    describe 'query :fetch_all param' do
+    describe 'query :batch_size param' do
       before(:each) do
         name = "a"*1024*300
         5.times do |i|
@@ -330,15 +330,15 @@ describe Dynamoid::AdapterPlugin::AwsSdkV2 do
         end
 
       end
-      it 'fetches all results when :fetch_all=true' do
+      it 'fetches all results when :batch_size provided' do
         result = Dynamoid.adapter.query(test_table5,
           :hash_value => '1',
-          :fetch_all => true
+          :batch_size => 2
         )
         expect(result.count).to eq(5)
       end
 
-      it 'limits to 1MB when :fetch_all is not provided' do
+      it 'limits to 1MB when :batch_size is not provided' do
         result = Dynamoid.adapter.query(test_table5, :hash_value => '1')
         expect(result.count).to eq(4)
       end

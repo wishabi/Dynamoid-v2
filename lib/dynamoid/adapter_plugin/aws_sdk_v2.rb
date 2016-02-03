@@ -287,7 +287,7 @@ module Dynamoid
       # @option opts [Number] :range_less_than find range keys less than this
       # @option opts [Number] :range_gte find range keys greater than or equal to this
       # @option opts [Number] :range_lte find range keys less than or equal to this
-      # @option opts [Boolean] :fetch_all fetch all the results for the query instead of limiting to 1MB
+      # @option opts [Boolean] :batch_size fetch all the results for the query instead of limiting to 1MB and query in batches
       # @return [Enumerable] matching items
       #
       # @since 1.0.0
@@ -300,10 +300,12 @@ module Dynamoid
         q     = opts.slice(
                   :consistent_read,
                   :scan_index_forward,
-                  :limit,
                   :select,
                   :index_name
                 )
+        limit = opts.delete(:limit)
+        batch = opts.delete(:batch_size)
+        q[:limit] = batch || limit if (batch || limit)
 
         opts.delete(:consistent_read)
         opts.delete(:scan_index_forward)
@@ -350,7 +352,7 @@ module Dynamoid
             result.items.each { |r| y << result_item_to_hash(r) }
             last_key = result.last_evaluated_key
 
-            if(last_key && opts[:fetch_all] == true)
+            if(last_key && batch)
               q[:exclusive_start_key] = last_key
             else
               break
