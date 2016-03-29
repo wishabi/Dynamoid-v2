@@ -74,6 +74,50 @@ describe Dynamoid::Persistence do
     end
   end
 
+  describe 'dump_object' do
+    it 'converts empty strings to null in the hash values' do
+      hash = {:first_name => "joe", :last_name => '', :age => 23}
+      expect(Address.new.send(:dump_object, hash)).to eql({
+        :first_name=>"joe",
+        :last_name=>nil,
+        :age=>23
+      })
+    end
+
+    it 'converts empty strings to null for the array values' do
+      arr = [1, 2, 3, nil, '']
+      expect(Address.new.send(:dump_object, arr)).to eql([1, 2, 3, nil, nil])
+    end
+
+    it 'converts empty strings to null for the set values' do
+      set = Set.new([1, 2, 3, nil, ''])
+      expect(Address.new.send(:dump_object, set)).to eql(Set.new([1, 2, 3, nil]))
+    end
+
+    it 'converts empty strings to null for hash, array and set' do
+      obj = {
+        :hash => {
+          :first_name => "joe",
+          :last_name => "",
+          :info => {
+            :set => Set.new([1, 2, 3, '']),
+            :arr => [4, 5, '', 6]
+          }
+        }
+      }
+      expect(Address.new.send(:dump_object, obj)).to eql({
+        :hash => {
+          :first_name => "joe",
+          :last_name => nil,
+          :info => {
+            :set => Set.new([1, 2, 3, nil]),
+            :arr => [4, 5, nil, 6]
+          }
+        }
+      })
+    end
+  end
+
   it 'assigns itself an id on save' do
     address.save
 
@@ -163,8 +207,11 @@ describe Dynamoid::Persistence do
   end
 
   it 'dumps and undumps a Hash in :hash field' do
-    h = {:population => 1000}
-    expect(Address.undump(Address.new(info: h).send(:dump))[:info]).to eq h
+    h = {:population => 1000, :city => ''}
+    expect(Address.undump(Address.new(info: h).send(:dump))[:info]).to eq({
+      :population => 1000,
+      :city => nil
+    })
   end
 
   it 'supports empty containers in `serialized` fields' do

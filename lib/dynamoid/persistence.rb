@@ -295,11 +295,11 @@ module Dynamoid
           when :number
             !value.nil? ? value : nil
           when :set
-            !value.nil? ? Set.new(value) : nil
+            !value.nil? ? dump_object(Set.new(value)) : nil
           when :array
-            !value.nil? ? value : nil
+            !value.nil? ? dump_object(value) : nil
           when :hash
-            !value.nil? ? value : nil
+            !value.nil? ? dump_object(value) : nil
           when :datetime
             !value.nil? ? value.to_time.to_f : nil
           when :serialized
@@ -317,6 +317,26 @@ module Dynamoid
           else
             raise ArgumentError, "Unknown type #{options[:type]}"
         end
+      end
+    end
+
+    # Convert empty strings to nil in objects since DynamoDB does not allow
+    # empty strings in the database.
+    def dump_object(obj)
+      case obj
+      when Hash
+        obj.inject({}) do |new_hash, (key, value)|
+          new_hash[key] = (value == '' ? nil : dump_object(value))
+          new_hash
+        end
+      when Array, Set
+        new_obj = obj.class.new
+        obj.each do |value|
+          new_obj << (value == '' ? nil : dump_object(value))
+        end
+        new_obj
+      else
+        obj
       end
     end
 
