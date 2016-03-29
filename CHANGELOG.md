@@ -1,3 +1,11 @@
+# 2.0.0
+
+* Added hash support
+* Changed the way booleans are stored (like true/false)
+* Added fix to remove empty strings in Hashes, Arrays, Sets
+* Added destroy! and delete_table
+* Added secondary index support
+
 # 1.1.0
 
 * Added support for optimistic locking on delete (PR #29, sumocoder)
