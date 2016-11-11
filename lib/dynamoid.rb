@@ -29,7 +29,7 @@ require 'dynamoid/middleware/identity_map'
 module Dynamoid
   extend self
 
-  MAX_ITEM_SIZE = 65_536
+  MAX_ITEM_SIZE = 400_000
 
   def configure
     block_given? ? yield(Dynamoid::Config) : Dynamoid::Config
