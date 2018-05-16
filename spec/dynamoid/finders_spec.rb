@@ -227,12 +227,6 @@ describe Dynamoid::Finders do
     end
   end
 
-  describe '.find_all_by_secondary_index' do
-    def time_to_decimal(time)
-      BigDecimal("%d.%09d" % [time.to_i, time.nsec])
-    end
-  end
-
   describe '.find_all_by_composite_key' do
     let(:time) { Time.now }
     it 'finds all items if hash key provided' do
@@ -265,8 +259,8 @@ describe Dynamoid::Finders do
   end
 
   describe '.find_all_by_secondary_index' do
-    def time_to_f(time)
-      time.to_time.to_f
+    def time_to_decimal(time)
+      BigDecimal("%d.%09d" % [time.to_i, time.nsec])
     end
 
     it 'returns exception if index could not be found' do

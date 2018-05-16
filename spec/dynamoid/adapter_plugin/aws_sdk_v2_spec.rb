@@ -755,33 +755,6 @@ describe Dynamoid::AdapterPlugin::AwsSdkV2 do
       expect(Dynamoid.adapter.query(test_table1, hash_value: '1').first).to eq(id: '1', name: 'Josh')
     end
 
-    describe 'query :batch_size param' do
-      before(:each) do
-        name = "a"*1024*300
-        5.times do |i|
-          Dynamoid.adapter.put_item(test_table6, {
-              :id => "1",
-              :range => i.to_s,
-              :name => name
-            }
-          )
-        end
-
-      end
-      it 'fetches all results when :batch_size provided' do
-        result = Dynamoid.adapter.query(test_table6,
-          :hash_value => '1',
-          :batch_size => 2
-        )
-        expect(result.count).to eq(5)
-      end
-
-      it 'limits to 1MB when :batch_size is not provided' do
-        result = Dynamoid.adapter.query(test_table6, :hash_value => '1')
-        expect(result.count).to eq(4)
-      end
-    end
-
     it 'performs query on a table and returns items if there are multiple items' do
       Dynamoid.adapter.put_item(test_table1, id: '1', name: 'Josh')
       Dynamoid.adapter.put_item(test_table1, id: '2', name: 'Justin')

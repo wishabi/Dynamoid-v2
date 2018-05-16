@@ -196,60 +196,6 @@ module Dynamoid
         end
       end
 
-      # Find all objects by using local secondary or global secondary index
-      #
-      # @example
-      #   class User
-      #     include Dynamoid::Document
-      #     field :email,          :string
-      #     field :age,            :integer
-      #     field :gender,         :string
-      #     field :rank            :number
-      #     table :key => :email
-      #     global_secondary_index :hash_key => :age, :range_key => :gender
-      #   end
-      #   User.find_all_by_secondary_index(:age => 5, :range => {"rank.lte" => 10})
-      #
-      # @param [Hash] hash eg: {:age => 5}
-      # @param [Hash] options - @TODO support more options in future such as query filter, projected keys etc
-      # @option options [Hash] :range {"rank.lte" => 10}
-      # @option options [Boolean] :batch_size Fetch all records instead of limiting to 1MB
-      # @return [Array] an array of all matching items
-      def find_all_by_secondary_index(hash, options = {})
-        range = options[:range] || {}
-        hash_key_field, hash_key_value = hash.first
-        range_key_field, range_key_value = range.first
-        range_op_mapped = nil
-
-        if range_key_field
-          range_key_field = range_key_field.to_s
-          range_key_op = "eq"
-          if range_key_field.include?(".")
-            range_key_field, range_key_op = range_key_field.split(".", 2)
-          end
-          range_op_mapped = RANGE_MAP.fetch(range_key_op)
-        end
-
-        # Find the index
-        index = self.find_index(hash_key_field, range_key_field)
-        raise Dynamoid::Errors::MissingIndex if index.nil?
-
-        # query
-        opts = {
-          :hash_key => hash_key_field.to_s,
-          :hash_value => hash_key_value,
-          :index_name => index.name,
-        }
-        opts[:batch_size] = options[:batch_size] if options[:batch_size]
-        if range_key_field
-          opts[:range_key] = range_key_field
-          opts[range_op_mapped] = range_key_value
-        end
-        Dynamoid.adapter.query(self.table_name, opts).map do |item|
-          from_database(item)
-        end
-      end
-
       # Find using exciting method_missing finders attributes. Uses criteria chains under the hood to accomplish this neatness.
       #
       # @example find a user by a first name

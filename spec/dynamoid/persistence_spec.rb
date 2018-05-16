@@ -339,18 +339,6 @@ describe Dynamoid::Persistence do
     expect(@subscription.send(:dump)[:magazine_ids]).to eq Set[@magazine.hash_key]
   end
 
-  describe 'boolean attributes' do
-    it 'dumps it as boolean' do
-      address.deliverable = true
-      expect(address.send(:dump)[:deliverable]).to eql true
-    end
-
-    it 'raises exception if value is not boolean' do
-      address.deliverable = "true"
-      expect { address.send(:dump)[:deliverable] }.to raise_error(ArgumentError)
-    end
-  end
-
   it 'handles nil attributes properly' do
     expect(Address.undump(nil)).to be_a(Hash)
   end
@@ -382,6 +370,7 @@ describe Dynamoid::Persistence do
       :population => 1000,
       :city => nil
     })
+  end
 
   it 'dumps and undumps a date' do
     date = '2017-06-18'.to_date
@@ -435,7 +424,6 @@ describe Dynamoid::Persistence do
     end
   end
 
-    #TODO: Check this
   describe "Boolean field" do
     context "stored in string format" do
       let(:klass) do
@@ -846,10 +834,10 @@ describe Dynamoid::Persistence do
         a1.save!
 
         a2.destroy(:skip_lock_check => true)
-        expect(Address.find(address.id)).to eql nil
+        expect { Address.find(address.id) }.to raise_exception(Dynamoid::Errors::RecordNotFound)
       end
 
-      it 'uses the correct lock_version even if it is modified' do
+      it 'uses the./spec/dynamoid/persistence_spec.rb correct lock_version even if it is modified' do
         address.save!
         a1 = address
         a1.lock_version = 100

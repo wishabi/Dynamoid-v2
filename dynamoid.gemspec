@@ -3,9 +3,9 @@ lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "dynamoid/version"
 
-Gem::Specification.new do |s|
-  s.name = "dynamoid"
-  s.version = "3.0.0"
+Gem::Specification.new do |spec|
+  spec.name = "dynamoid"
+  spec.version = "3.0.0"
 
 
   # Keep in sync with README
@@ -60,5 +60,4 @@ Gem::Specification.new do |s|
   spec.add_development_dependency "wwtd", "~> 1.3"
   spec.add_development_dependency(%q<yard>, [">= 0"])
   spec.add_development_dependency "coveralls", "~> 0.8"
-  spec.add_development_dependency(%q<debugger>, [">= 0"])
 end

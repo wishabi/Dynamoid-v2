@@ -201,6 +201,26 @@ module Dynamoid
         end
       end
 
+      # Convert empty strings to nil in objects since DynamoDB does not allow
+      # empty strings in the database.
+      def dump_object(obj)
+        case obj
+        when Hash
+          obj.inject({}) do |new_hash, (key, value)|
+            new_hash[key] = (value == '' ? nil : dump_object(value))
+            new_hash
+          end
+        when Array, Set
+          new_obj = obj.class.new
+          obj.each do |value|
+            new_obj << (value == '' ? nil : dump_object(value))
+          end
+          new_obj
+        else
+          obj
+        end
+      end
+
       def dynamo_type(type)
         if type.is_a?(Class)
           type.respond_to?(:dynamoid_field_type) ? type.dynamoid_field_type : :string
@@ -487,21 +507,7 @@ module Dynamoid
     # Convert empty strings to nil in objects since DynamoDB does not allow
     # empty strings in the database.
     def dump_object(obj)
-      case obj
-      when Hash
-        obj.inject({}) do |new_hash, (key, value)|
-          new_hash[key] = (value == '' ? nil : dump_object(value))
-          new_hash
-        end
-      when Array, Set
-        new_obj = obj.class.new
-        obj.each do |value|
-          new_obj << (value == '' ? nil : dump_object(value))
-        end
-        new_obj
-      else
-        obj
-      end
+      self.class.dump_object(obj)
     end
 
     # Persist the object into the datastore. Assign it an id first if it doesn't have one.

@@ -547,7 +547,7 @@ module Dynamoid
         scan_limit = opts.delete(:scan_limit)
         batch_size = opts.delete(:batch_size)
         exclusive_start_key = opts.delete(:exclusive_start_key)
-        limit = [record_limit, scan_limit, batch_size].compact.min        
+        limit = [record_limit, scan_limit, batch_size].compact.min
 
         key_conditions = {
           hk => {
