@@ -523,24 +523,11 @@ module Dynamoid
                   :select,
                   :index_name
                 )
-        # TODO: Replace these with new ones
-        # limit = opts.delete(:limit)
-        # batch = opts.delete(:batch_size)
-        # q[:limit] = batch || limit if (batch || limit)
 
         opts.delete(:consistent_read)
         opts.delete(:scan_index_forward)
         opts.delete(:select)
         opts.delete(:index_name)
-
-        # TODO: Replace this one with new one
-        # opts.delete(:next_token).tap do |token|
-        #   break unless token
-        #   q[:exclusive_start_key] = {
-        #     hk  => token[:hash_key_element],
-        #     rng => token[:range_key_element]
-        #   }
-        # end
 
         # Deal with various limits and batching
         record_limit = opts.delete(:record_limit)
@@ -638,7 +625,6 @@ module Dynamoid
         request[:consistent_read] = true if select_opts.delete(:consistent_read)
 
         # Deal with various limits and batching
-        # TODO: Replace with new values
         record_limit = select_opts.delete(:record_limit)
         scan_limit = select_opts.delete(:scan_limit)
         batch_size = select_opts.delete(:batch_size)

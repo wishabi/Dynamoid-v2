@@ -178,6 +178,7 @@ module Dynamoid
             when :hash
               !value.nil? ? dump_object(value) : nil
             when :datetime
+              # !value.nil? ? value.to_time.to_f : nil
               !value.nil? ? format_datetime(value, options) : nil
             when :date
               !value.nil? ? format_date(value, options) : nil
@@ -242,7 +243,7 @@ module Dynamoid
       # @option opts [Boolean] :skip_lock_check - skips checking the lock version
       def destroy_all(opts = {})
         batch_size = opts[:batch_size] || 100
-        self.eval_limit(batch_size).all.each {|i| i.destroy(opts)}
+        self.record_limit(batch_size).all.each {|i| i.destroy(opts)}
       end
 
       # Creates several models at once.
