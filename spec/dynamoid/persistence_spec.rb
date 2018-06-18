@@ -837,7 +837,7 @@ describe Dynamoid::Persistence do
         expect { Address.find(address.id) }.to raise_exception(Dynamoid::Errors::RecordNotFound)
       end
 
-      it 'uses the./spec/dynamoid/persistence_spec.rb correct lock_version even if it is modified' do
+      it 'uses the correct lock_version even if it is modified' do
         address.save!
         a1 = address
         a1.lock_version = 100
